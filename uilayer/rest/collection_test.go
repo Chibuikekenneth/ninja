@@ -2,6 +2,7 @@ package rest
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -41,9 +42,10 @@ func createCollection(t *testing.T, req string) {
 	err := json.Unmarshal([]byte(req), &collectionData)
 	AssertEqual(t, err, nil)
 
+	ctx := context.Background()
 	coreManager, mockDataStore, mockCtrler, err := GetCoreManager(t)
 	if mockCtrler != nil {
-		mockDataStore.EXPECT().CreateCollection(collectionData.Name, collectionData.Schema, collectionData.Meta).Return(nil).MinTimes(1)
+		mockDataStore.EXPECT().CreateCollection(ctx, collectionData.Name, collectionData.Schema, collectionData.Meta).Return(nil).MinTimes(1)
 		defer mockCtrler.Finish()
 	}
 
@@ -74,9 +76,10 @@ func TestGetCollections(t *testing.T) {
 
 	createCollection(t, req)
 
+	ctx := context.Background()
 	coreManager, mockDataStore, mockCtrler, err := GetCoreManager(t)
 	if mockCtrler != nil {
-		mockDataStore.EXPECT().GetCollections().Return([]datalayer.CollectionVM{reqData}, nil)
+		mockDataStore.EXPECT().GetCollections(ctx).Return([]datalayer.CollectionVM{reqData}, nil)
 		defer mockCtrler.Finish()
 	}
 
@@ -113,9 +116,10 @@ func TestGetSchema(t *testing.T) {
 
 	createCollection(t, req)
 
+	ctx := context.Background()
 	coreManager, mockDataStore, mockCtrler, err := GetCoreManager(t)
 	if mockCtrler != nil {
-		mockDataStore.EXPECT().GetSchema(reqData.Name).Return(reqData.Schema, nil)
+		mockDataStore.EXPECT().GetSchema(ctx, reqData.Name).Return(reqData.Schema, nil)
 		defer mockCtrler.Finish()
 	}
 
@@ -162,9 +166,10 @@ func TestSaveItem(t *testing.T) {
 	var itemData map[string]interface{}
 	json.Unmarshal([]byte(itemBody), &itemData)
 
+	ctx := context.Background()
 	if mockCtrler != nil {
-		mockDataStore.EXPECT().GetSchema(reqData.Name).Return(reqData.Schema, nil)
-		mockDataStore.EXPECT().SaveItem(reqData.Name, itemData["_id"].(string), itemData).Return(nil)
+		mockDataStore.EXPECT().GetSchema(ctx, reqData.Name).Return(reqData.Schema, nil)
+		mockDataStore.EXPECT().SaveItem(ctx, reqData.Name, itemData["_id"].(string), itemData).Return(nil)
 		defer mockCtrler.Finish()
 	}
 
